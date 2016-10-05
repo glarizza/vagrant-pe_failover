@@ -1,0 +1,59 @@
+---
+vms:
+  - name: "puppetmaster1.puppet.vm"
+    box:  "puppetlabs/centos-6.6-64-nocm"
+    roles:
+      - "active_master"
+      - "install_pe_failover"
+      - "install_pe_failover_prereqs"
+      - "install_git"
+      - "pe_install_with_answers"
+      - "customize_pe_via_hiera_2015"
+      - "create_second_master_host_entry"
+      - "blank_resolve_conf"
+      - "4-cpus"
+      - "2gb-memory"
+      - "centos"
+      - "hosts"
+      - "auto_net"
+
+  - name: "puppetmaster2.puppet.vm"
+    box:  "puppetlabs/centos-6.6-64-nocm"
+    roles:
+      - "install_pe_failover"
+      - "install_pe_failover_prereqs"
+      - "install_git"
+      - "pe_repo_package_install"
+      - "customize_pe_via_hiera_2015"
+      - "blank_resolve_conf"
+      - "4-cpus"
+      - "2gb-memory"
+      - "centos"
+      - "hosts"
+      - "auto_net"
+
+  - name: "agent1.puppet.vm"
+    box:  "puppetlabs/centos-6.6-64-nocm"
+    roles:
+      - "pe_agent"
+      - "set_puppet_host_entry"
+      - "blank_resolve_conf"
+      - "4-cpus"
+      - "2gb-memory"
+      - "centos"
+      - "hosts"
+      - "auto_net"
+
+  - name: "agent2.puppet.vm"
+    box:  "puppetlabs/centos-6.6-64-nocm"
+    roles:
+      - "pe_agent"
+      - "set_puppet_host_entry"
+      - "blank_resolve_conf"
+      - "4-cpus"
+      - "2gb-memory"
+      - "centos"
+      - "hosts"
+      - "auto_net"
+
+

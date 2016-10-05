@@ -1,0 +1,90 @@
+---
+
+# The value of $pe_install::puppetdb_certname is used to populate the value of
+# $puppet_enterprise::puppetdb_host that is set in the PE Infrastructure group
+# of the console. The value of $pe_install::puppetdb_certname is defaulted to
+# the value of $puppet_enterprise::puppetdb_host.  As of version 2016.2.x, the module expects a string value for
+# $pe_install::puppetdb_certname, so if $puppet_enterprise::puppetdb_host is
+# set to more than one value then you'll get a type mismatch error. We set this
+# value to avoid that error.
+#pe_install::puppetdb_certname: "%{::clientcert}"
+
+# NOTE: The puppet_enterprise::profile::database class uses a union between
+# the node's certname and puppet_enterprise::puppetdb_host to create rules
+# in pg_ident.conf that are necessary for every PuppetDB host to contact the
+# external postgres database. This parameter needs to include every host that
+# will have a PuppetDB instance on it for these rules to be created.
+# Unfortunately, the PE Infrastructure group explicitly sets this value, so
+# setting it in Hiera does nothing for us - it must be changed in the console.
+#puppet_enterprise::puppetdb_host:
+# - 'pe-mom'
+# - 'compile-master-puppetdb'
+
+# The $puppet_enterprise::puppetdb_port value needs to have a port to
+# correspond with every value of $puppet_enterprise::puppetdb_host. Since we
+# will have two values to that array (for the MOM and CM), there must be two
+# values in this array
+#puppet_enterprise::puppetdb_port:
+# - '8081'
+# - '8081'
+
+# ALSO - the PE Infrastructure group in the console sets puppetdb_host to be
+# a string based on pe_install::puppetdb_certname (which is set above). Because
+# this is explicitly set in the console, you cannot use Hiera to change the
+# value for the puppet_enterprise::profile::master::puppetdb::puppetdb_host
+# parameter because it is set explicitly with a resource-style declaration of
+# the puppet_enterprise::profile::master::puppetdb class from within the
+# puppet_enterprise::profile::master class. The way around this is to set
+# puppet_enterprise::profile::master::puppetdb_host using Hiera.
+#puppet_enterprise::profile::master::puppetdb_host:
+# - 'pe-mom'
+# - 'compile-master-puppetdb'
+
+#Drop puppetdb Java Heap Size
+#PE3.2 and above
+pe_puppetdb::pe::java_args:
+  -Xmx: '256m'
+  -Xms: '64m'
+#PE3.1 and below
+pe_puppetdb::java_args:
+  -Xmx: '256m'
+  -Xms: '64m'
+#Drop the activemq java heap size 
+pe_mcollective::role::master::activemq_heap_mb: '96'
+#Allow access to the puppetdb performance dashboard from non-localhost
+#This is insecure and also allows access to all API endpoints without verification
+pe_puppetdb::pe::listen_address: '0.0.0.0'
+
+#PE3.7
+#Allow access to the puppetdb performance dashboard from non-localhost
+#This is insecure and also allows access to all API endpoints without verification
+puppet_enterprise::profile::puppetdb::listen_address: '0.0.0.0'
+puppet_enterprise::profile::amq::broker::heap_mb: '96'
+puppet_enterprise::profile::master::java_args:
+  Xmx: '192m'
+  Xms: '128m'
+  'XX:MaxPermSize': '=96m'
+  'XX:PermSize': '=64m'
+  'XX:+UseG1GC': ''
+puppet_enterprise::profile::puppetdb::java_args:
+  Xmx: '128m'
+  Xms: '128m'
+  'XX:MaxPermSize': '=96m'
+  'XX:PermSize': '=64m'
+  'XX:+UseG1GC': ''
+puppet_enterprise::profile::console::java_args:
+  Xmx: '64m'
+  Xms: '64m'
+  'XX:MaxPermSize': '=96m'
+  'XX:PermSize': '=64m'
+  'XX:+UseG1GC': ''
+puppet_enterprise::master::puppetserver::jruby_max_active_instances: 1  #PE3.7.2 only
+puppet_enterprise::profile::console::delayed_job_workers: 1
+#shared_buffers takes affect during install but is not managed after
+puppet_enterprise::profile::database::shared_buffers: '4MB'
+#puppet_enterprise::profile::console::classifier_synchronization_period: 0
+#2015.3.2 and above
+puppet_enterprise::profile::orchestrator::java_args:
+  Xmx: '64m'
+  Xms: '64m'
+  'XX:+UseG1GC': ''

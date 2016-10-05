@@ -1,0 +1,61 @@
+#  Additional roles necessary for this specific repository
+
+---
+roles:
+
+  install_pe_failover_prereqs:
+    provisioners:
+      - type: shell
+        inline: "puppet module install stahnma-epel && puppet module install WhatsARanjit-node_manager && puppet apply -e 'include epel'"
+
+  install_pe_failover:
+    provisioners:
+      - type: shell
+        inline: "if [ ! -d '/etc/puppetlabs/code/environments/production/modules/pe_failover' ]; then cd /etc/puppetlabs/code/environments/production/modules && git clone https://github.com/ipcrm/pe_failover.git pe_failover; fi"
+
+  install_git:
+    provisioners:
+      - type: shell
+        inline: "puppet resource package git ensure=installed"
+
+  active_master:
+    provisioners:
+      - type: shell
+        inline: "puppet apply -e 'include pe_failover; class{pe_failover::active: passive_master => \"puppetmaster2.puppet.vm\", pdb_peer => \"puppetmaster2.puppet.vm\" }'"
+
+  set_puppet_host_entry:
+    provisioners:
+      - type: shell
+        inline: "sed -i 's/puppetmaster1.puppet.vm/puppetmaster1.puppet.vm puppet/g' /etc/hosts && puppet config set server puppet && puppet agent -t || true"
+
+  pe_install_with_answers:
+    provisioners:
+      - type: pe_bootstrap
+        answer_file: 'answer_files/pe.conf'
+
+  blank_resolve_conf:
+    provisioners:
+      - type: shell
+        inline: "echo 'nameserver 8.8.8.8' > /etc/resolv.conf"
+
+  ## NOTE: This is hardcoded according to IP for testing; again there's
+  #        probably a better way to do this...
+  create_second_master_host_entry:
+    provisioners:
+      - type: shell
+        inline: "echo '10.20.1.19 puppetmaster2.puppet.vm puppetmaster2' >> /etc/hosts"
+
+  ## NOTE: This is hardcoded according to version because we need to do a package
+  #        install that DOESN'T create a CSR on the passive master. Probably a
+  #        better way to do this...
+  pe_repo_package_install:
+    provisioners:
+      - type: shell
+        inline: "cp -f /vagrant/repo_files/pe_install_repo.repo /etc/yum.repos.d/pe_install_repo.repo && yum install puppet-agent -y"
+
+  # Set to 'puppet' to test out host alias and failover
+  pe_agent:
+    provisioners:
+      - type: pe_agent
+        master_vm: 'puppet'
+

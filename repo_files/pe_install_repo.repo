@@ -1,0 +1,6 @@
+[pe_install_repo]
+name=PuppetLabs PE Install Packages el-6-x86_64
+baseurl=file:///vagrant/.pe_build/puppet-enterprise-2016.2.1-el-6-x86_64/packages/el-6-x86_64
+enabled=1
+gpgcheck=1
+gpgkey=file:///vagrant/.pe_build/puppet-enterprise-2016.2.1-el-6-x86_64/packages/GPG-KEY-puppetlabs
